@@ -238,15 +238,29 @@
                 <input type="tel" id="g_phone" class="input-line" placeholder="01xxxxxxxxx" required>
             </div>
 
+            <!-- اختيار نوع الخدمة (لوحدها) -->
+            <div class="form-card required">
+                <label class="q-title">نوع الطلب / الخدمة <span>*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option">
+                        <input type="radio" name="order_type" value="داخل الفرع" required> 
+                        تناول داخل الفرع
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="order_type" value="دليفري / تيك أواي"> 
+                        دليفري / تيك أواي
+                    </label>
+                </div>
+            </div>
+
             <!-- 11. اختيار الفرع -->
             <div class="form-card required">
                 <label class="q-title">اختر الفرع <span>*</span></label>
                 <select id="g_branch" class="input-line" required style="background:none; cursor:pointer;">
                     <option value="" disabled selected>اختر الفرع من هنا</option>
                     <option value="المطريه">فرع المطريه</option>
-                    <option value="ميدان الف مسكن">فرع  ميدان الالف مسكن</option>
-                    <option value="مدينه الشروق">فرع  مدينه الشروق</option>
-                    <option value="دليفري">دليفري / تيك أواي</option>
+                    <option value="ميدان الف مسكن">فرع ميدان الالف مسكن</option>
+                    <option value="مدينه الشروق">فرع مدينه الشروق</option>
                 </select>
             </div>
 
@@ -313,6 +327,7 @@
             name: document.getElementById('g_name').value,
             phone: document.getElementById('g_phone').value,
             branch: document.getElementById('g_branch').value,
+            order_type: document.querySelector('input[name="order_type"]:checked').value,
             ratings: scores,
             visits_per_month: document.querySelector('input[name="visits"]:checked').value,
             distinction: document.getElementById('g_distinct').value,
