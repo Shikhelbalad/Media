@@ -13,6 +13,9 @@
             --bg-gradient: linear-gradient(135deg, #1a1a1a 0%, #2c1100 100%);
             --glass-bg: rgba(255, 255, 255, 0.05);
             --glass-border: rgba(255, 255, 255, 0.1);
+            --delivery-color: #3498db;
+            --takeaway-color: #9b59b6;
+            --dinein-color: #2ecc71;
         }
 
         body {
@@ -21,7 +24,7 @@
             color: white; min-height: 100vh; padding: 20px;
         }
 
-        .dashboard-container { max-width: 1300px; margin: 0 auto; }
+        .dashboard-container { max-width: 1400px; margin: 0 auto; }
 
         header { text-align: center; margin-bottom: 40px; }
         .logo-small { width: 80px; background: #fff; border-radius: 50%; padding: 5px; border: 2px solid var(--primary-color); }
@@ -47,7 +50,7 @@
 
         h2 { border-right: 4px solid var(--primary-color); padding-right: 15px; margin-bottom: 25px; }
 
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1150px; }
         th {
             text-align: right; padding: 15px;
             background: rgba(230, 126, 34, 0.2); color: var(--primary-color);
@@ -56,8 +59,14 @@
         td { padding: 15px; border-bottom: 1px solid var(--glass-border); font-size: 13px; vertical-align: top; }
 
         .star-rating { color: #f1c40f; font-size: 11px; display: block; white-space: nowrap; }
-        .branch-badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: 11px; }
+        .branch-badge { background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; font-size: 11px; display: inline-block; }
         
+        /* Order Type Badges */
+        .order-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; display: inline-block; }
+        .type-delivery { background: rgba(52, 152, 219, 0.2); color: #3498db; border: 1px solid #3498db; }
+        .type-takeaway { background: rgba(155, 89, 182, 0.2); color: #9b59b6; border: 1px solid #9b59b6; }
+        .type-dinein { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+
         .details-box { font-size: 12px; color: #ccc; line-height: 1.6; max-width: 250px; }
         .details-box b { color: var(--primary-color); font-size: 11px; }
 
@@ -70,7 +79,7 @@
         <header>
             <img src="images.jpg" alt="شيخ البلد" class="logo-small">
             <h1>لوحة تحكم تقييمات العملاء</h1>
-            <p>متابعة تفصيلية لجودة الغذاء والخدمة وطلبات العملاء</p>
+            <p>متابعة تفصيلية لجودة الغذاء والخدمة ونوع الطلبات</p>
         </header>
 
         <div class="stats-grid">
@@ -103,6 +112,7 @@
                     <tr>
                         <th>العميل ورقم الهاتف</th>
                         <th>الفرع</th>
+                        <th>نوع الطلب</th> <!-- العمود الجديد -->
                         <th>التقييمات (نجمات)</th>
                         <th>التكرار</th>
                         <th>ملاحظات واقتراحات</th>
@@ -145,7 +155,20 @@
         return `<div class="star-rating"><b>${label}:</b> ${stars}</div>`;
     }
 
-    // الربط مع المسار الجديد final_feedback
+    // دالة لتنسيق نوع الطلب بشكل مرئي
+    function getOrderTypeBadge(type) {
+        if (!type) return '<span class="order-badge" style="background:rgba(255,255,255,0.05)">-</span>';
+        
+        let className = '';
+        let icon = '';
+        
+        if (type.includes('دليفري')) { className = 'type-delivery'; icon = 'fa-motorcycle'; }
+        else if (type.includes('تيك أواي')) { className = 'type-takeaway'; icon = 'fa-bag-shopping'; }
+        else if (type.includes('داخل الفرع')) { className = 'type-dinein'; icon = 'fa-utensils'; }
+        
+        return `<span class="order-badge ${className}"><i class="fas ${icon}"></i> ${type}</span>`;
+    }
+
     const reviewsRef = ref(db, 'final_feedback');
     
     onValue(reviewsRef, (snapshot) => {
@@ -164,12 +187,10 @@
         let branchCounts = {};
         let count = 0;
 
-        // ترتيب التقييمات من الأحدث للأقدم
         Object.keys(data).reverse().forEach(key => {
             const item = data[key];
             count++;
             
-            // حساب المتوسط بناءً على الأربع تصنيفات الجديدة
             const ratings = item.ratings || {product:0, service:0, clean:0, overall:0};
             const avgItem = (ratings.product + ratings.service + ratings.clean + ratings.overall) / 4;
             totalScore += avgItem;
@@ -185,6 +206,7 @@
                         </a>
                     </td>
                     <td><span class="branch-badge">${item.branch || 'غير محدد'}</span></td>
+                    <td>${getOrderTypeBadge(item.order_type)}</td> <!-- عرض نوع الطلب -->
                     <td>
                         ${renderStars(ratings.product, 'المنتج')}
                         ${renderStars(ratings.service, 'الخدمة')}
@@ -206,7 +228,6 @@
             tbody.innerHTML += row;
         });
 
-        // تحديث أرقام الإحصائيات
         document.getElementById('totalReviews').innerText = count;
         const avg = (totalScore / count).toFixed(1);
         document.getElementById('avgRating').innerText = avg;
