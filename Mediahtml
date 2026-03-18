@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>شيخ البلد - التقييم الذكي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #e67e22; 
+            --bg-color: #0f0f0f;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Cairo', sans-serif;
+            background: var(--bg-color);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            color: white; overflow-x: hidden;
+            perspective: 1000px;
+        }
+
+        /* حاوية الحركة 3D */
+        .tilt-container {
+            width: 95%; max-width: 450px;
+            transition: transform 0.1s ease-out;
+            transform-style: preserve-3d;
+            padding: 20px 0;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 30px 20px;
+            text-align: center;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+
+        .logo-img { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--primary-color); background: #fff; margin-bottom: 15px; }
+
+        .links-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .link-btn {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.1); padding: 12px 20px;
+            border-radius: 15px; text-decoration: none; color: white; transition: 0.3s;
+        }
+        .link-btn:hover { background: var(--primary-color); transform: scale(1.02); }
+
+        /* نافذة التقييم (المودال) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f0f2f5; display: none; flex-direction: column;
+            z-index: 2000; overflow-y: auto; padding-bottom: 40px;
+        }
+
+        .modal-header {
+            background: #fff; padding: 15px 20px;
+            display: flex; align-items: center; justify-content: space-between;
+            width: 100%; max-width: 550px; margin: 0 auto 15px auto;
+            border-radius: 0 0 15px 15px; box-sizing: border-box;
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .back-btn { color: var(--primary-color); cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+
+        /* تصميم الكروت البيضاء */
+        .form-card {
+            background: #fff; color: #000;
+            border-radius: 12px; padding: 20px;
+            margin-bottom: 15px; text-align: right;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            width: 95%; max-width: 550px; margin-left: auto; margin-right: auto;
+            box-sizing: border-box; border-top: 8px solid transparent;
+        }
+        .form-card.required { border-top-color: var(--primary-color); }
+
+        .q-title { font-weight: bold; font-size: 16px; margin-bottom: 8px; display: block; }
+        .q-title span { color: #d93025; margin-right: 4px; }
+        .q-sub { font-size: 13px; color: #70757a; margin-bottom: 15px; display: block; }
+
+        /* حقول الإدخال */
+        .input-line {
+            width: 100%; border: none; border-bottom: 1px solid #dadce0;
+            padding: 10px 0; font-family: 'Cairo'; font-size: 15px;
+            outline: none; transition: 0.3s;
+        }
+        .input-line:focus { border-bottom: 2px solid var(--primary-color); }
+
+        /* التقييم بالنجوم */
+        .stars-row { display: flex; justify-content: space-around; width: 100%; margin-top: 10px; }
+        .star-item { text-align: center; cursor: pointer; flex: 1; }
+        .star-item span { display: block; font-size: 12px; margin-bottom: 5px; color: #70757a; }
+        .star-item i { font-size: 24px; color: #ddd; }
+        .star-item i.active { color: #f1c40f; }
+
+        /* اختيارات الراديو (عدد الزيارات) */
+        .radio-group { display: flex; flex-direction: column; gap: 12px; }
+        .radio-option { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 15px; }
+        .radio-option input { width: 18px; height: 18px; accent-color: var(--primary-color); }
+
+        .submit-btn {
+            background: #d93025; color: white; border: none;
+            padding: 12px 35px; border-radius: 4px; cursor: pointer;
+            font-weight: bold; font-size: 16px; width: 100%; margin-top: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="tilt-container" id="tiltCard">
+        <div class="main-card">
+            <img src="images.jpg" class="logo-img">
+            <h2 style="margin:0">شيخ البلد</h2>
+            <p style="color:#aaa; font-size:14px; margin-bottom:25px;">كفتة زمان بالمتر</p>
+
+            <div class="links-grid">
+                <a href="https://shaykhalbalad.github.io/shaykh-albalad/Menu" class="link-btn">
+                    <i class="fas fa-utensils"></i><span>المنيو (Menu)</span><i class="fas fa-chevron-left"></i>
+                </a>
+                <div class="link-btn" onclick="openModal()" style="cursor:pointer; background:rgba(230,126,34,0.2); border:1px solid var(--primary-color)">
+                    <i class="fas fa-star" style="color:#f1c40f"></i><span>قيم تجربتك (التقييم الكامل)</span><i class="fas fa-chevron-left"></i>
+                </div>
+                <a href="https://www.tiktok.com/@sheikhelbalad1" class="link-btn"><i class="fab fa-tiktok"></i><span>تيك توك</span><i class="fas fa-chevron-left"></i></a>
+                <a href="https://www.facebook.com/hatysheikhelbalad" class="link-btn"><i class="fab fa-facebook"></i><span>فيسبوك</span><i class="fas fa-chevron-left"></i></a>
+                <a href="tel:15188" class="link-btn"><i class="fas fa-phone"></i><span>الخط الساخن: 15188</span><i class="fas fa-chevron-left"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- المودال (الاستبيان) -->
+    <div class="modal-overlay" id="ratingModal">
+        <div class="modal-header">
+            <div class="back-btn" onclick="closeModal()"><i class="fas fa-arrow-right"></i><span>رجوع</span></div>
+            <div style="font-weight: bold; color: #444;">نموذج تقييم العميل</div>
+        </div>
+        
+        <form id="sheikhForm">
+            
+            <!-- 1. المنتج -->
+            <div class="form-card required">
+                <label class="q-title">المنتج <span>*</span></label>
+                <span class="q-sub">بالرجاء جداً تقييم تجربتكم</span>
+                <div class="stars-row" data-cat="product">
+                    <div class="star-item" data-v="1"><span>1</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="2"><span>2</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="3"><span>3</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="4"><span>4</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="5"><span>5</span><i class="far fa-star"></i></div>
+                </div>
+            </div>
+
+            <!-- 2. الخدمة -->
+            <div class="form-card required">
+                <label class="q-title">الخدمة <span>*</span></label>
+                <span class="q-sub">بالرجاء جداً تقييم تجربتكم</span>
+                <div class="stars-row" data-cat="service">
+                    <div class="star-item" data-v="1"><span>1</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="2"><span>2</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="3"><span>3</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="4"><span>4</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="5"><span>5</span><i class="far fa-star"></i></div>
+                </div>
+            </div>
+
+            <!-- 3. النظافة -->
+            <div class="form-card required">
+                <label class="q-title">النظافة <span>*</span></label>
+                <span class="q-sub">بالرجاء جداً تقييم تجربتكم</span>
+                <div class="stars-row" data-cat="clean">
+                    <div class="star-item" data-v="1"><span>1</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="2"><span>2</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="3"><span>3</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="4"><span>4</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="5"><span>5</span><i class="far fa-star"></i></div>
+                </div>
+            </div>
+
+            <!-- 4. التقييم العام -->
+            <div class="form-card required">
+                <label class="q-title">التقييم العام <span>*</span></label>
+                <span class="q-sub">بالرجاء جداً تقييم تجربتكم</span>
+                <div class="stars-row" data-cat="overall">
+                    <div class="star-item" data-v="1"><span>1</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="2"><span>2</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="3"><span>3</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="4"><span>4</span><i class="far fa-star"></i></div>
+                    <div class="star-item" data-v="5"><span>5</span><i class="far fa-star"></i></div>
+                </div>
+            </div>
+
+            <!-- 5. عدد الزيارات -->
+            <div class="form-card">
+                <label class="q-title">إذا كنت عميل دائم - تقريباً عدد الزيارات في الشهر <span>*</span></label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="visits" value="مرة" required> مرة واحدة</label>
+                    <label class="radio-option"><input type="radio" name="visits" value="مرتين"> مرتين</label>
+                    <label class="radio-option"><input type="radio" name="visits" value="3 مرات"> 3 مرات</label>
+                    <label class="radio-option"><input type="radio" name="visits" value="غير ذلك"> غير ذلك</label>
+                </div>
+            </div>
+
+            <!-- 6. ما يميزنا -->
+            <div class="form-card">
+                <label class="q-title">ماذا يميز شيخ البلد من وجهة نظرك؟</label>
+                <input type="text" id="g_distinct" class="input-line" placeholder="إجابتك">
+            </div>
+
+            <!-- 7. منتج أعجبك -->
+            <div class="form-card">
+                <label class="q-title">منتج حاز إعجابكم</label>
+                <input type="text" id="g_liked" class="input-line" placeholder="إجابتك">
+            </div>
+
+            <!-- 8. منتج مقترح -->
+            <div class="form-card">
+                <label class="q-title">منتج تحب أن يكون موجوداً لدينا</label>
+                <input type="text" id="g_suggest" class="input-line" placeholder="إجابتك">
+            </div>
+
+            <!-- الأسئلة المطلوب وضعها تحت بعض في النهاية -->
+            
+            <!-- 9. الاسم -->
+            <div class="form-card required">
+                <label class="q-title">الاسم <span>*</span></label>
+                <span class="q-sub">بعض المعلومات الشخصية تفيدنا في حال الربح فقط</span>
+                <input type="text" id="g_name" class="input-line" placeholder="أدخل اسمك" required>
+            </div>
+
+            <!-- 10. رقم التليفون -->
+            <div class="form-card required">
+                <label class="q-title">رقم التليفون <span>*</span></label>
+                <input type="tel" id="g_phone" class="input-line" placeholder="01xxxxxxxxx" required>
+            </div>
+
+            <!-- 11. اختيار الفرع -->
+            <div class="form-card required">
+                <label class="q-title">اختر الفرع <span>*</span></label>
+                <select id="g_branch" class="input-line" required style="background:none; cursor:pointer;">
+                    <option value="" disabled selected>اختر الفرع من هنا</option>
+                    <option value="المطريه">فرع المطريه</option>
+                    <option value="ميدان الف مسكن">فرع  ميدان الالف مسكن</option>
+                    <option value="مدينه الشروق">فرع  مدينه الشروق</option>
+                    <option value="دليفري">دليفري / تيك أواي</option>
+                </select>
+            </div>
+
+            <div style="width:95%; max-width:550px; margin:auto;">
+                <button type="submit" class="submit-btn">إرسال التقييم</button>
+            </div>
+        </form>
+    </div>
+
+<script type="module">
+    // --- Tilt Effect ---
+    const card = document.getElementById('tiltCard');
+    document.addEventListener('mousemove', (e) => {
+        let xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+        let yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+        card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
+
+    // --- Firebase Logic ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyB1J7lSkqHHShPlkvtIUwpgmgsGqJ1uhJQ",
+        authDomain: "sheikh-pro-61502.firebaseapp.com",
+        databaseURL: "https://sheikh-pro-61502-default-rtdb.firebaseio.com",
+        projectId: "sheikh-pro-61502",
+        storageBucket: "sheikh-pro-61502.firebasestorage.app",
+        messagingSenderId: "388665698743",
+        appId: "1:388665698743:web:7eca2bfc0223f9c1736032"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.openModal = () => { document.getElementById('ratingModal').style.display = 'flex'; document.body.style.overflow='hidden'; }
+    window.closeModal = () => { document.getElementById('ratingModal').style.display = 'none'; document.body.style.overflow='auto'; }
+
+    let scores = { product: 0, service: 0, clean: 0, overall: 0 };
+
+    document.querySelectorAll('.star-item').forEach(item => {
+        item.onclick = function() {
+            const cat = this.parentElement.dataset.cat;
+            const val = parseInt(this.dataset.v);
+            scores[cat] = val;
+            const stars = this.parentElement.querySelectorAll('i');
+            stars.forEach((s, idx) => {
+                if(idx < val) { s.classList.replace('far', 'fas'); s.classList.add('active'); }
+                else { s.classList.replace('fas', 'far'); s.classList.remove('active'); }
+            });
+        }
+    });
+
+    document.getElementById('sheikhForm').onsubmit = async (e) => {
+        e.preventDefault();
+        if(scores.product==0 || scores.service==0 || scores.clean==0 || scores.overall==0) { 
+            alert("من فضلك أكمل تقييم النجوم لجميع الأقسام"); return; 
+        }
+        
+        const btn = e.target.querySelector('button');
+        btn.innerText = "جاري الإرسال...";
+        
+        const data = {
+            name: document.getElementById('g_name').value,
+            phone: document.getElementById('g_phone').value,
+            branch: document.getElementById('g_branch').value,
+            ratings: scores,
+            visits_per_month: document.querySelector('input[name="visits"]:checked').value,
+            distinction: document.getElementById('g_distinct').value,
+            liked_product: document.getElementById('g_liked').value,
+            suggested_product: document.getElementById('g_suggest').value,
+            time: new Date().toLocaleString('ar-EG')
+        };
+
+        try {
+            await push(ref(db, 'final_feedback'), data);
+            alert('شكراً لك! تم إرسال تقييمك بنجاح.');
+            location.reload();
+        } catch { alert('حدث خطأ أثناء الإرسال'); btn.innerText = "إرسال التقييم"; }
+    };
+</script>
+</body>
+</html>
